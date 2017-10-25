@@ -1,0 +1,53 @@
+inputs:
+  labels: { default: {} }
+
+node_templates:
+
+  kubernetes:
+    type: cloudify.nodes.Kubernetes
+    properties:
+    # Set up openstack auth requirements - these are expected to be set in the env as variables.
+    # Add all vars that are currently set in RC script.
+      custom_env:
+        OS_AUTH_URL: { get_secret: keystone_url }
+        OS_USERNAME: { get_secret: keystone_username }
+        OS_PASSWORD: { get_secret: keystone_password }
+        OS_REGION_NAME: { get_secret: region }
+        OS_TENANT_ID: { get_secret: keystone_tenant_name }
+        OS_IDENTITY_API_VERSION: { get_secret: keystone_identity_api_version }
+        OS_USER_DOMAIN_NAME: { get_secret: keystone_domain_name }
+        OS_PROJECT_DOMAIN_NAME: { get_secret: keystone_domain_name }
+        OS_DOMAIN_NAME: { get_secret: keystone_domain_name }
+        OS_DEFAULT_DOMAIN: { get_secret: keystone_domain_name }
+    relationships:
+      - { type: cloudify.relationships.depends_on, target: kubernetes_master1 }
+      - { type: cloudify.relationships.depends_on, target: kubernetes_master2 }
+      - { type: cloudify.relationships.depends_on, target: kubernetes_master3 }
+      - { type: cloudify.relationships.depends_on, target: kubernetes_node }
+
+  kubernetes_master1:
+    type: cloudify.nodes.Kubernetes.Master
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_master_host1
+
+  kubernetes_master2:
+    type: cloudify.nodes.Kubernetes.Master
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_master_host2
+
+  kubernetes_master3:
+    type: cloudify.nodes.Kubernetes.Master
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_master_host3
+
+
+  kubernetes_node:
+    type: cloudify.nodes.Kubernetes.Node
+    properties:
+      labels: { get_input: labels }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_node_host

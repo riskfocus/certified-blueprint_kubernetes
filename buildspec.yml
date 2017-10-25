@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - python --version
+      - pip --version
+      - echo Installing Cloudify Manager CLI...
+      - pip install cloudify
+
+      - echo Connecting to CM...
+      - cfy init
+      - cfy profiles use -u admin -p admin -t default_tenant <MY_TEST_CLOUDIFY_MANAGER>
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - cfy install -b $CODEBUILD_BUILD_ID -d $CODEBUILD_BUILD_ID aws-blueprint.yaml -i inputs/ --include-logs --timeout 9000 -vv
+      - cfy outputs $CODEBUILD_BUILD_ID | tee outputs.log
+
+  post_build:
+    commands:
+      - "cfy uninstall $CODEBUILD_BUILD_ID --include-logs --timeout 9000 -p 'ignore_failure: true'"
+
+artifacts:
+  files:
+    - outputs.log
+  discard-paths: yes

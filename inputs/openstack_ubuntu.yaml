@@ -1,0 +1,5 @@
+# ubuntu 16.04 image goes below
+image: <insert image ID here>
+agent_user: ubuntu
+bootstrap_os: ubuntu
+network_plugin: calico

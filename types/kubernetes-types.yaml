@@ -1,0 +1,88 @@
+#  This file defines the basic structure of a Kubernetes node for a blueprint to deploy. Its major purpose
+#  is to direct nodes in the cloudify.nodes.Kubernetes* namespace to implementations in the blueprint
+#  directory. Replacing your implementation (kubespray in this specific implementation) should be a matter
+#  of restructuring this blueprint to point to a different implementation. Prior version of this types file
+#  used kubeadm as a toy example of setting up Kubernetes.
+#  This file should ONLY define types and requirements for them, NOT node_templates. Node templates should be
+#  defined making use of types defined in here.
+
+inputs:
+
+  bootstrap_os:
+    description: OS for bootstrap
+    default: 'centos'
+
+  cloud_provider:
+    description: cloud provider for underlying VMs for cluster
+    default: 'aws'
+
+  kubespray_tag:
+    description: Tag to use for kubespray checkout.
+    default: 'v2.2.0'
+
+  network_plugin:
+    description: Network plugin to use for K8s cluster (weave, calico, etc)
+    default: 'weave'
+
+  api_server_node_port_range:
+    description: API server node port range (option to Kubespray playbook
+    default: '30-37500'
+
+node_types:
+
+  cloudify.nodes.Kubernetes:
+    derived_from: cloudify.nodes.Root
+    properties:
+      private_key_path:
+        default:  { get_secret: agent_key_path }
+      agent_user:
+        default: { get_input: agent_user }
+      bootstrap_os:
+        description: OS for bootstrap
+        default: { get_input: bootstrap_os }
+      cloud_provider:
+        description: Cloud provider for underlying VMs in cluster
+        default: { get_input: cloud_provider }
+      kubespray_tag:
+        description: Release tag for Kubespray checkout
+        default: { get_input: kubespray_tag }
+      network_plugin:
+        description: Network plugin to use for K8s cluster (weave, calico, etc)
+        default: { get_input: network_plugin }
+      api_server_node_port_range:
+        description: API server node port range (option to Kubespray playbook
+        default: { get_input: api_server_node_port_range }
+      custom_env:
+        description: Environment variables that need to be set prior to run; useful for OpenStack auth or proxy settings.
+        default: {}
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          executor: central_deployment_agent
+          implementation: script.script_runner.tasks.run
+          inputs:
+            script_path:
+              default: scripts/kubespray/create.py
+        delete:
+          executor: central_deployment_agent
+          implementation: script.script_runner.tasks.run
+          inputs:
+            script_path:
+              default: scripts/kubespray/delete.py
+
+  cloudify.nodes.Kubernetes.Master:
+    derived_from: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/create.py
+        configure: scripts/set_master.py
+
+  cloudify.nodes.Kubernetes.Node:
+    derived_from: cloudify.nodes.Root
+    properties:
+      labels:
+        default: {}
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/create.py
+        configure: scripts/set_node.py

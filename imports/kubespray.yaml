@@ -1,0 +1,43 @@
+inputs:
+  labels: { default: {} }
+
+node_templates:
+
+  kubernetes:
+    type: cloudify.nodes.Kubernetes
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: kubernetes_master1
+      - type: cloudify.relationships.depends_on
+        target: kubernetes_master2
+      - type: cloudify.relationships.depends_on
+        target: kubernetes_master3
+      - type: cloudify.relationships.depends_on
+        target: kubernetes_node
+
+  kubernetes_master1:
+    type: cloudify.nodes.Kubernetes.Master
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_master_host1
+
+  kubernetes_master2:
+    type: cloudify.nodes.Kubernetes.Master
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_master_host2
+
+  kubernetes_master3:
+    type: cloudify.nodes.Kubernetes.Master
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_master_host3
+
+
+  kubernetes_node:
+    type: cloudify.nodes.Kubernetes.Node
+    properties:
+      labels: { get_input: labels }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: kubernetes_node_host

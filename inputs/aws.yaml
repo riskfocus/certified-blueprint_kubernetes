@@ -1,0 +1,9 @@
+k8.vpc: vpc-<YOUR_ID>
+
+k8.master1.subnet: subnet-<YOUR_ID>
+k8.master2.subnet: subnet-<YOUR_ID>
+k8.master3.subnet: subnet-<YOUR_ID>
+
+k8.nodes.subnet: subnet-<YOUR_ID>
+
+k8.ssh_access_cidr: <YOUR_IP - 127.0.0.1/32>

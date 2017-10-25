@@ -1,0 +1,8 @@
+# Tell kubespray that the underlying cloud provider is openstack.
+cloud_provider: openstack
+
+# Use calico for networking (instead of default weave)
+# http://superuser.openstack.org/articles/making-openstack-production-ready-with-kubernetes-and-openstack-salt-part-2/
+network_plugin: calico
+
+# Insert topology-specific inputs below.
